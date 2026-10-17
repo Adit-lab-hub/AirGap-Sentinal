@@ -1,0 +1,5 @@
+watchdog
+ollama
+cryptography
+google-genai
+graphifyy

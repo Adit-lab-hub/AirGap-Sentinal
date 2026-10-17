@@ -1,0 +1,39 @@
+Oct 17 12:00:01 edge-gateway-01 systemd[1]: Starting Daily apt download activities...
+Oct 17 12:00:15 edge-gateway-01 CRON[18402]: (root) CMD (/usr/local/bin/sensor-sync.sh >/dev/null 2>&1)
+Oct 17 12:00:22 edge-gateway-01 kernel: [ 4812.102911] eth0: Link is Up - 1Gbps/Full - flow control rx/tx
+Oct 17 12:01:05 edge-gateway-01 telemetry-agent[1120]: Heartbeat dispatched to local supervisory controller
+Oct 17 12:01:30 edge-gateway-01 systemd[1]: apt-daily.service: Deactivated successfully.
+Oct 17 12:02:11 edge-gateway-01 plc-collector[1304]: Polling Modbus registers from PLC_RACK_04... OK (32 registers)
+Oct 17 12:03:00 edge-gateway-01 telemetry-agent[1120]: Ingestion buffer at 64% capacity (normal)
+Oct 17 12:04:12 edge-gateway-01 plc-collector[1304]: Polling Modbus registers from PLC_RACK_04... OK (32 registers)
+Oct 17 12:05:00 edge-gateway-01 CRON[18910]: (root) CMD (/usr/lib/sysstat/debian-sa1 1 1)
+Oct 17 12:05:45 edge-gateway-01 plc-collector[1304]: Read temperature sensor T_CHAMBER_1: 72.4 C
+Oct 17 12:06:18 edge-gateway-01 kernel: [ 5178.490102] EXT4-fs (sda1): warning: mounting fs with errors
+Oct 17 12:07:01 edge-gateway-01 telemetry-agent[1120]: Rotating local parquet buffer to disk...
+Oct 17 12:07:30 edge-gateway-01 database-daemon[1420]: Checkpoint starting: time 12:07:30, flags 0x0010
+Oct 17 12:08:15 edge-gateway-01 database-daemon[1420]: Checkpoint complete: wrote 1482 buffers (9.0%); 0 WAL file(s) added
+Oct 17 12:09:00 edge-gateway-01 plc-collector[1304]: Polling Modbus registers from PLC_RACK_04... OK (32 registers)
+Oct 17 12:10:02 edge-gateway-01 telemetry-agent[1120]: Writing batch 48102 to /var/log/sentinel/telemetry_batch_48102.dat
+Oct 17 12:11:15 edge-gateway-01 plc-collector[1304]: Pressure reading P_VALVE_02: 142.1 PSI
+Oct 17 12:12:00 edge-gateway-01 systemd[1]: Starting Clean php session files...
+Oct 17 12:12:19 edge-gateway-01 systemd[1]: phpsessionclean.service: Deactivated successfully.
+Oct 17 12:13:01 edge-gateway-01 telemetry-agent[1120]: WARNING: Local storage threshold exceeded 95% on /dev/sda1
+Oct 17 12:13:40 edge-gateway-01 plc-collector[1304]: Polling Modbus registers from PLC_RACK_04... OK (32 registers)
+Oct 17 12:14:02 edge-gateway-01 database-daemon[1420]: Archive recovery initiated for transaction stream #91024
+Oct 17 12:14:15 edge-gateway-01 database-daemon[1420]: Attempting write to table space /var/lib/sentinel/ts_data
+Oct 17 12:14:22 edge-gateway-01 database-daemon[1420]: [FATAL] Failed to write transaction log: No space left on device (errno 28)
+Oct 17 12:14:23 edge-gateway-01 database-daemon[1420]: Aborting worker thread 4 due to unhandled I/O error
+Oct 17 12:14:25 edge-gateway-01 systemd[1]: sentinel-db.service: Main process exited, code=exited, status=1/FAILURE
+Oct 17 12:14:25 edge-gateway-01 systemd[1]: sentinel-db.service: Failed with result 'exit-code'.
+Oct 17 12:14:30 edge-gateway-01 kernel: [ 5670.301928] EXT4-fs (sda1): out of disk space on allocation
+Oct 17 12:15:00 edge-gateway-01 telemetry-agent[1120]: ERROR: Unable to persist metrics: disk write failed
+Oct 17 12:15:10 edge-gateway-01 plc-collector[1304]: ERROR: Failed to flush sample queue: broken pipe
+Oct 17 12:15:45 edge-gateway-01 telemetry-agent[1120]: Entering fail-safe emergency fallback mode
+Oct 17 12:16:01 edge-gateway-01 CRON[19200]: (root) CMD (/usr/lib/sysstat/debian-sa1 1 1)
+Oct 17 12:16:15 edge-gateway-01 alert-manager[1510]: CRITICAL ALERT: Database engine stopped unexpectedly
+Oct 17 12:16:30 edge-gateway-01 alert-manager[1510]: Secondary notification queue dropped 14 alerts
+Oct 17 12:17:00 edge-gateway-01 kernel: [ 5820.100234] sda1: write error, blocks dropped
+Oct 17 12:17:15 edge-gateway-01 telemetry-agent[1120]: Retrying write operation (attempt 3/5)... failed
+Oct 17 12:17:45 edge-gateway-01 supervisor[902]: Process sentinel-db needs restart, but backoff limit reached
+Oct 17 12:18:00 edge-gateway-01 systemd[1]: sentinel-db.service: Scheduled restart job, restart counter is at 5.
+Oct 17 12:18:01 edge-gateway-01 systemd[1]: Stopped Sentinel Core Ingestion Database.

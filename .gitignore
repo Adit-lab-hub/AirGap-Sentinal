@@ -1,0 +1,18 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+.env
+
+# Audit logs
+audit/*.jsonl
+
+# Ollama local models/binaries
+ollama/
+
+# Note: graphify-out/ is intentionally NOT ignored to preserve proof of Graphify usage
