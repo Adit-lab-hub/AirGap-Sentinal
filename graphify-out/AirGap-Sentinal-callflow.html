@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AirGap-Sentinal — Complete Call Flow &amp; Architecture Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --warn: #fbbf24; --err: #f87171; --ok: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.7rem; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+h4 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--warn); }
+p { margin: 8px 0; color: var(--muted); }
+.subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; }
+.mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; position: relative; }
+.mermaid.is-enhanced { padding: 0; overflow: hidden; min-height: 260px; }
+.mermaid-viewport { padding: 54px 24px 24px; overflow: hidden; cursor: grab; touch-action: none; min-height: 260px; }
+.mermaid-viewport.is-dragging { cursor: grabbing; }
+.mermaid-viewport svg { max-width: none !important; height: auto; transform-origin: 0 0; transition: transform 120ms ease; }
+.mermaid-toolbar { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(15,23,42,0.92); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+.mermaid-toolbar button, .mermaid-toolbar .zoom-level { height: 28px; min-width: 32px; border: 1px solid var(--border); border-radius: 6px; background: #1e293b; color: var(--text); font: 600 0.78rem system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.mermaid-toolbar button { cursor: pointer; }
+.mermaid-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.mermaid-toolbar .zoom-level { min-width: 52px; color: var(--muted); background: transparent; }
+.call-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+.call-table th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+.call-table td { padding: 8px 14px; border: 1px solid var(--border); vertical-align: top; }
+.call-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.tag-async { background: #7c3aed33; color: #a78bfa; }
+.tag-class { background: #05966933; color: var(--ok); }
+.tag-func { background: #2563eb33; color: var(--accent); }
+.tag-cmd { background: #d9770633; color: var(--warn); }
+.tag-endpoint { background: #dc262633; color: var(--err); }
+.tag-hook { background: #db277733; color: #f472b6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+.arrow-chain { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--accent); padding: 10px; background: rgba(56,189,248,0.06); border-radius: 6px; }
+code { font-family: 'Fira Code', 'Cascadia Code', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; }
+ul, ol { margin: 8px 0 8px 24px; color: var(--muted); }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.nav { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+@media (max-width: 768px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>AirGap-Sentinal — Complete Call Flow &amp; Architecture Documentation</h1>
+<p class="subtitle">Generated from graphify knowledge graph: 81 nodes, 127 edges, 10 communities. Commit: 45d206d</p>
+
+<div class="nav">
+    <a href="#overview">Architecture Overview</a>
+    <a href="#build-graph">Graph Build</a>
+    <a href="#cli-skills">CLI &amp; Skill Installers</a>
+    <a href="#security-global">Security &amp; Global Graph</a>
+    <a href="#tests-fixtures">Tests &amp; Fixtures</a>
+    <a href="#sentinel-py">sentinel.py</a>
+    <a href="#start-folder-watcher">start_folder_watcher</a>
+    <a href="#load-env-file">load_env_file</a>
+</div>
+
+<!-- ====== Architecture Overview ====== -->
+<h2 id="overview">1. Architecture Overview</h2>
+
+<div class="mermaid">
+
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>5 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>5 nodes</small>")
+    class CLI_SKILLS_9964CBB8 module;
+    SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>15 nodes</small>")
+    class SECURITY_GLOBAL_5B9C6A04 module;
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>28 nodes</small>")
+    class TESTS_FIXTURES_B84B1DCC module;
+    SENTINEL_PY_F786321A("sentinel.py<br/><small>18 nodes</small>")
+    class SENTINEL_PY_F786321A module;
+    START_FOLDER_WATCHER_300AFA8F("start_folder_watcher<br/><small>8 nodes</small>")
+    class START_FOLDER_WATCHER_300AFA8F module;
+    LOAD_ENV_FILE_DD45F9D1("load_env_file<br/><small>2 nodes</small>")
+    class LOAD_ENV_FILE_DD45F9D1 module;
+    SENTINEL_PY_F786321A -->|contains x7| TESTS_FIXTURES_B84B1DCC
+    SENTINEL_PY_F786321A -->|calls x4| BUILD_GRAPH_321CBB04
+    SENTINEL_PY_F786321A -->|contains x3| START_FOLDER_WATCHER_300AFA8F
+    SENTINEL_PY_F786321A -->|calls x3| CLI_SKILLS_9964CBB8
+    START_FOLDER_WATCHER_300AFA8F -->|calls x3| SENTINEL_PY_F786321A
+    TESTS_FIXTURES_B84B1DCC -->|imports x2| SENTINEL_PY_F786321A
+    TESTS_FIXTURES_B84B1DCC -->|references x2| START_FOLDER_WATCHER_300AFA8F
+    TESTS_FIXTURES_B84B1DCC -->|method| CLI_SKILLS_9964CBB8
+    TESTS_FIXTURES_B84B1DCC -->|method| BUILD_GRAPH_321CBB04
+    BUILD_GRAPH_321CBB04 -->|calls| TESTS_FIXTURES_B84B1DCC
+    SENTINEL_PY_F786321A -->|contains| LOAD_ENV_FILE_DD45F9D1
+    TESTS_FIXTURES_B84B1DCC -->|contains| SECURITY_GLOBAL_5B9C6A04
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h4>Architecture Layers</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
+      <tr><td>Graph Build</td><td>5</td><td><code>5</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>5</td><td><code>8, 4</code></td></tr><tr><td>Security &amp; Global Graph</td><td>15</td><td><code>2</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>28</td><td><code>7, 3, 6</code></td></tr><tr><td>sentinel.py</td><td>18</td><td><code>0</code></td></tr><tr><td>start_folder_watcher</td><td>8</td><td><code>1</code></td></tr><tr><td>load_env_file</td><td>2</td><td><code>9</code></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Core Flow</h4>
+    <div class="arrow-chain">Security &amp; Global Graph -&gt; Graph Build -&gt; Tests &amp; Fixtures -&gt; start_folder_watcher -&gt; sentinel.py -&gt; CLI &amp; Skill Installers -&gt; load_env_file</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <h4>Graph Report Highlights</h4>
+    <ul>
+      <li>81 nodes · 127 edges · 10 communities (4 shown, 6 thin omitted)</li>
+      <li>Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.95)</li>
+      <li>Token cost: 0 input · 0 output</li>
+      <li>1. `diagnose_single_path()` - 10 edges</li>
+      <li>2. `TestAirGapSentinel` - 9 edges</li>
+      <li>3. `AirGap Sentinel 🛡️` - 9 edges</li>
+    </ul>
+  </div>
+</div>
+<hr>
+<!-- ====== 2. Graph Build ====== -->
+<h2 id="build-graph">2. Graph Build</h2>
+<p>Graph Build groups implementation around json, sentinelpy, test, parse, mostly in sentinel.py, test_sentinel.py. This section covers 5 nodes and 4 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Graph Build (5 nodes, 4 edges)
+    subgraph build_graph_sentinel_py_4db00ba9["sentinel.py"]
+        sentinel_parse_and_clean_json_1b8ba929("parse_and_clean_json()<br/><small>sentinel.py</small>")
+        sentinel_rationale_150_3b593126("Extracts and parses a JSON object from...<br/><small>sentinel.py</small>")
+    end
+    subgraph build_graph_test_sentinel_py_0f8ee979["test_sentinel.py"]
+        test_sentinel_testairgapsentinel_test_parse_and_e60fd27d("test_parse_and_clean_json_valid()<br/><small>test_sentinel.py</small>")
+        test_sentinel_rationale_73_434d9d3b("Verify extraction from raw JSON and mar...<br/><small>test_sentinel.py</small>")
+    end
+    json_05d97e6e("json")
+    sentinel_parse_and_clean_json_1b8ba929 -->|calls| json_05d97e6e
+    test_sentinel_testairgapsentinel_test_parse_and_e60fd27d -->|calls| sentinel_parse_and_clean_json_1b8ba929
+    class sentinel_parse_and_clean_json_1b8ba929 function;
+    class sentinel_rationale_150_3b593126 concept;
+    class test_sentinel_testairgapsentinel_test_parse_and_e60fd27d test;
+    class test_sentinel_rationale_73_434d9d3b concept;
+    class json_05d97e6e function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>parse_and_clean_json()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>run_cloud_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>run_local_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>test_parse_and_clean_json_valid()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>json</code><br><code>re</code></td>
+  <td>parse_and_clean_json() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>.test_parse_and_clean_json_valid()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>parse_and_clean_json()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Extracts and parses a JSON object from raw LLM output. Why: LLMs occasionally…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Extracts and parses a JSON object from raw LLM output. Why: LLMs occasionally….</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Verify extraction from raw JSON and markdown-wrapped JSON.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify extraction from raw JSON and markdown-wrapped JSON..</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>json</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>parse_and_clean_json()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>json node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>sentinel.py</code></td><td>2 nodes</td></tr>
+<tr><td><code>test_sentinel.py</code></td><td>2 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x2, explains x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 3. CLI & Skill Installers ====== -->
+<h2 id="cli-skills">3. CLI &amp; Skill Installers</h2>
+<p>CLI &amp; Skill Installers groups implementation around prompt, sentinelpy, diagnosticsskillmd, test, mostly in sentinel.py, test_sentinel.py, diagnostics.SKILL.md. This section covers 5 nodes and 3 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: CLI &amp; Skill Installers (5 nodes, 3 edges)
+    subgraph cli_skills_sentinel_py_8aee9109["sentinel.py"]
+        sentinel_load_skill_prompt_473acf3b("load_skill_prompt()<br/><small>sentinel.py</small>")
+        sentinel_rationale_72_f7974633("Loads the system prompt from diagnostic...<br/><small>sentinel.py</small>")
+    end
+    subgraph cli_skills_test_sentinel_py_7a49be34["test_sentinel.py"]
+        test_sentinel_testairgapsentinel_test_load_skill_c60d1f5e("test_load_skill_prompt()<br/><small>test_sentinel.py</small>")
+        test_sentinel_rationale_18_0376a44c("Verify diagnostics.SKILL.md loads prope...<br/><small>test_sentinel.py</small>")
+    end
+    diagnostics_skill_5e6e63ac("diagnostics.SKILL.md")
+    test_sentinel_testairgapsentinel_test_load_skill_c60d1f5e -->|calls| sentinel_load_skill_prompt_473acf3b
+    class sentinel_load_skill_prompt_473acf3b function;
+    class sentinel_rationale_72_f7974633 concept;
+    class test_sentinel_testairgapsentinel_test_load_skill_c60d1f5e test;
+    class test_sentinel_rationale_18_0376a44c concept;
+    class diagnostics_skill_5e6e63ac concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>load_skill_prompt()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>run_cloud_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>run_local_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>test_load_skill_prompt()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>Builds structured prompts for model calls.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>.test_load_skill_prompt()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>load_skill_prompt()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Builds structured prompts for model calls.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Loads the system prompt from diagnostics.SKILL.md. Why: Keeps AI behavior…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Loads the system prompt from diagnostics.SKILL.md. Why: Keeps AI behavior….</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Verify diagnostics.SKILL.md loads properly as system prompt contract.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify diagnostics.SKILL.md loads properly as system prompt contract..</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>diagnostics.SKILL.md</code><br><small style="color:var(--muted)">diagnostics.SKILL.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing diagnostics.SKILL.md.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>sentinel.py</code></td><td>2 nodes</td></tr>
+<tr><td><code>test_sentinel.py</code></td><td>2 nodes</td></tr>
+<tr><td><code>diagnostics.SKILL.md</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: explains x2, calls x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. Security & Global Graph ====== -->
+<h2 id="security-global">4. Security &amp; Global Graph</h2>
+<p>Security &amp; Global Graph groups implementation around readmemd, airgap, sentinel, hackathon, mostly in README.md. This section covers 15 nodes and 14 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Security &amp; Global Graph (15 nodes, 14 edges)
+    readme_airgap_sentinel_fe4027cb("AirGap Sentinel 🛡️<br/><small>README.md</small>")
+    readme_running_airgap_sentinel_1bc9f865("💻 Running AirGap Sentinel<br/><small>README.md</small>")
+    readme_quick_start_installation_e1551b24("🚀 Quick Start &amp; Installation<br/><small>README.md</small>")
+    readme_how_we_used_graphify_challenge_c3_36692961("🧠 How We Used Graphify (Challenge C3)<br/><small>README.md</small>")
+    readme_sample_output_335cda0c("📊 Sample Output<br/><small>README.md</small>")
+    readme_project_overview_bb1cd4a0("📌 Project Overview<br/><small>README.md</small>")
+    readme_1_clone_install_dependencies_fd9e1bb9("1. Clone &amp; Install Dependencies<br/><small>README.md</small>")
+    readme_1_verify_backend_connectivity_check_cf41dfa2("1. Verify Backend Connectivity (--check)<br/><small>README.md</small>")
+    readme_2_diagnose_a_single_incident_log_once_pat_4ed424d4("2. Diagnose a Single Incident Log (--o...<br/><small>README.md</small>")
+    readme_2_prepare_local_ollama_offline_mode_561d5f97("2. Prepare Local Ollama (Offline Mode)<br/><small>README.md</small>")
+    readme_3_real_time_directory_watcher_watch_dir_cb80938b("3. Real-Time Directory Watcher (--watc...<br/><small>README.md</small>")
+    readme_example_graph_queries_run_during_developm_5a1f0098("Example Graph Queries Run During Develo...<br/><small>README.md</small>")
+    readme_hackathon_2_minute_demo_script_for_judges_e11c418e("🎬 Hackathon 2-Minute Demo Script for Ju...<br/><small>README.md</small>")
+    readme_hackathon_challenges_satisfied_a4247bba("🏆 Hackathon Challenges Satisfied<br/><small>README.md</small>")
+    readme_license_edbe4ad9("📄 License<br/><small>README.md</small>")
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_sample_output_335cda0c
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_project_overview_bb1cd4a0
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_how_we_used_graphify_challenge_c3_36692961
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_hackathon_2_minute_demo_script_for_judges_e11c418e
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_license_edbe4ad9
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_hackathon_challenges_satisfied_a4247bba
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_quick_start_installation_e1551b24
+    readme_airgap_sentinel_fe4027cb -->|contains| readme_running_airgap_sentinel_1bc9f865
+    readme_how_we_used_graphify_challenge_c3_36692961 -->|contains| readme_example_graph_queries_run_during_developm_5a1f0098
+    readme_quick_start_installation_e1551b24 -->|contains| readme_1_clone_install_dependencies_fd9e1bb9
+    readme_quick_start_installation_e1551b24 -->|contains| readme_2_prepare_local_ollama_offline_mode_561d5f97
+    readme_running_airgap_sentinel_1bc9f865 -->|contains| readme_3_real_time_directory_watcher_watch_dir_cb80938b
+    readme_running_airgap_sentinel_1bc9f865 -->|contains| readme_1_verify_backend_connectivity_check_cf41dfa2
+    readme_running_airgap_sentinel_1bc9f865 -->|contains| readme_2_diagnose_a_single_incident_log_once_pat_4ed424d4
+    class readme_airgap_sentinel_fe4027cb concept;
+    class readme_running_airgap_sentinel_1bc9f865 concept;
+    class readme_quick_start_installation_e1551b24 concept;
+    class readme_how_we_used_graphify_challenge_c3_36692961 concept;
+    class readme_sample_output_335cda0c concept;
+    class readme_project_overview_bb1cd4a0 concept;
+    class readme_1_clone_install_dependencies_fd9e1bb9 concept;
+    class readme_1_verify_backend_connectivity_check_cf41dfa2 concept;
+    class readme_2_diagnose_a_single_incident_log_once_pat_4ed424d4 concept;
+    class readme_2_prepare_local_ollama_offline_mode_561d5f97 concept;
+    class readme_3_real_time_directory_watcher_watch_dir_cb80938b concept;
+    class readme_example_graph_queries_run_during_developm_5a1f0098 concept;
+    class readme_hackathon_2_minute_demo_script_for_judges_e11c418e concept;
+    class readme_hackathon_challenges_satisfied_a4247bba concept;
+    class readme_license_edbe4ad9 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>1. Clone &amp; Install Dependencies</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 1. Clone &amp; Install Dependencies.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>1. Verify Backend Connectivity (`--check`)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 1. Verify Backend Connectivity (`--check`).</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>2. Diagnose a Single Incident Log (`--once PATH`)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 2. Diagnose a Single Incident Log (`--once PATH`).</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>2. Prepare Local Ollama (Offline Mode)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 2. Prepare Local Ollama (Offline Mode).</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>3. Real-Time Directory Watcher (`--watch DIR`)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 3. Real-Time Directory Watcher (`--watch DIR`).</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>AirGap Sentinel 🛡️</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing AirGap Sentinel 🛡️.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Example Graph Queries Run During Development:</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Example Graph Queries Run During Development:.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>🎬 Hackathon 2-Minute Demo Script for Judges</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🎬 Hackathon 2-Minute Demo Script for Judges.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>🏆 Hackathon Challenges Satisfied</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🏆 Hackathon Challenges Satisfied.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>🧠 How We Used Graphify (Challenge C3)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🧠 How We Used Graphify (Challenge C3).</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>📄 License</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 📄 License.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>📌 Project Overview</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 📌 Project Overview.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>🚀 Quick Start &amp; Installation</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🚀 Quick Start &amp; Installation.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>💻 Running AirGap Sentinel</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 💻 Running AirGap Sentinel.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>📊 Sample Output</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 📊 Sample Output.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>15 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x14. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. Tests & Fixtures ====== -->
+<h2 id="tests-fixtures">5. Tests &amp; Fixtures</h2>
+<p>Tests &amp; Fixtures groups implementation around sentinelpy, test, log, verify, mostly in test_sentinel.py, sentinel.py, DEVLOG.md. This section covers 28 nodes and 31 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Tests &amp; Fixtures (28 nodes, 31 edges)
+    subgraph tests_fixtures_test_sentinel_py_311c84fd["test_sentinel.py"]
+        test_sentinel_testairgapsentinel_149ea383("TestAirGapSentinel<br/><small>test_sentinel.py</small>")
+        test_sentinel_8509efee("test_sentinel.py")
+        test_sentinel_testairgapsentinel_test_load_log_f_54d9c4fb("test_load_log_file_empty_raises()<br/><small>test_sentinel.py</small>")
+        test_sentinel_testairgapsentinel_test_load_log_f_9d94bcf3("test_load_log_file_normal()<br/><small>test_sentinel.py</small>")
+        test_sentinel_testairgapsentinel_test_load_log_f_729f0d52("test_load_log_file_truncation()<br/><small>test_sentinel.py</small>")
+        test_sentinel_testairgapsentinel_test_sanitize_c_273b4117("test_sanitize_command_safe()<br/><small>test_sentinel.py</small>")
+        test_sentinel_testairgapsentinel_test_verbatim_e_af11df75("test_verbatim_evidence_verification()<br/><small>test_sentinel.py</small>")
+        test_sentinel_testairgapsentinel_test_sanitize_c_10b516f8("test_sanitize_command_blocklist()<br/><small>test_sentinel.py</small>")
+    end
+    subgraph tests_fixtures_External_generated_473753cb["External / generated"]
+        re_c387c982("re")
+        tempfile_30fe567d("tempfile")
+        unittest_94e06087("unittest")
+        pathlib_4471f74a("pathlib")
+    end
+    subgraph tests_fixtures_sentinel_py_f995e8fe["sentinel.py"]
+        sentinel_format_and_print_diagnosis_00c3c5d2("format_and_print_diagnosis()<br/><small>sentinel.py</small>")
+        sentinel_load_log_file_cd5bb30d("load_log_file()<br/><small>sentinel.py</small>")
+        sentinel_sanitize_command_f96c946f("sanitize_command()<br/><small>sentinel.py</small>")
+    end
+    subgraph tests_fixtures_DEVLOG_md_14338844["DEVLOG.md"]
+        devlog_airgap_sentinel_development_log_graphify_e364a862("AirGap Sentinel - Development Log (Grap...<br/><small>DEVLOG.md</small>")
+        devlog_bc4d22b5("DEVLOG.md")
+    end
+    readme_f78a71af("README.md")
+    test_sentinel_testairgapsentinel_149ea383 -->|method| test_sentinel_testairgapsentinel_test_sanitize_c_273b4117
+    test_sentinel_testairgapsentinel_149ea383 -->|method| test_sentinel_testairgapsentinel_test_verbatim_e_af11df75
+    test_sentinel_testairgapsentinel_149ea383 -->|method| test_sentinel_testairgapsentinel_test_load_log_f_9d94bcf3
+    test_sentinel_testairgapsentinel_149ea383 -->|method| test_sentinel_testairgapsentinel_test_load_log_f_54d9c4fb
+    test_sentinel_testairgapsentinel_149ea383 -->|method| test_sentinel_testairgapsentinel_test_load_log_f_729f0d52
+    test_sentinel_testairgapsentinel_149ea383 -->|method| test_sentinel_testairgapsentinel_test_sanitize_c_10b516f8
+    test_sentinel_testairgapsentinel_test_load_log_f_54d9c4fb -->|calls| sentinel_load_log_file_cd5bb30d
+    test_sentinel_testairgapsentinel_test_load_log_f_9d94bcf3 -->|calls| sentinel_load_log_file_cd5bb30d
+    test_sentinel_testairgapsentinel_test_load_log_f_729f0d52 -->|calls| sentinel_load_log_file_cd5bb30d
+    sentinel_format_and_print_diagnosis_00c3c5d2 -->|calls| sentinel_sanitize_command_f96c946f
+    sentinel_sanitize_command_f96c946f -->|calls| re_c387c982
+    test_sentinel_testairgapsentinel_test_sanitize_c_10b516f8 -->|calls| sentinel_sanitize_command_f96c946f
+    test_sentinel_testairgapsentinel_test_sanitize_c_273b4117 -->|calls| sentinel_sanitize_command_f96c946f
+    test_sentinel_8509efee -->|imports| tempfile_30fe567d
+    test_sentinel_8509efee -->|imports| unittest_94e06087
+    test_sentinel_8509efee -->|imports| pathlib_4471f74a
+    %% Omitted for readability: 10 nodes, 0 edges
+    class test_sentinel_testairgapsentinel_149ea383 test;
+    class test_sentinel_8509efee test;
+    class test_sentinel_testairgapsentinel_test_load_log_f_54d9c4fb test;
+    class test_sentinel_testairgapsentinel_test_load_log_f_9d94bcf3 test;
+    class test_sentinel_testairgapsentinel_test_load_log_f_729f0d52 test;
+    class test_sentinel_testairgapsentinel_test_sanitize_c_273b4117 test;
+    class test_sentinel_testairgapsentinel_test_verbatim_e_af11df75 test;
+    class test_sentinel_testairgapsentinel_test_sanitize_c_10b516f8 test;
+    class re_c387c982 function;
+    class tempfile_30fe567d function;
+    class unittest_94e06087 function;
+    class pathlib_4471f74a function;
+    class sentinel_format_and_print_diagnosis_00c3c5d2 function;
+    class sentinel_load_log_file_cd5bb30d function;
+    class sentinel_sanitize_command_f96c946f entry;
+    class devlog_airgap_sentinel_development_log_graphify_e364a862 concept;
+    class devlog_bc4d22b5 concept;
+    class readme_f78a71af concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>format_and_print_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>sanitize_command()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>format_and_print_diagnosis() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>sanitize_command()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>format_and_print_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>test_sanitize_command_blocklist()</code><br><small style="color:var(--muted)">test_sentinel.py</small><br><code>test_sanitize_command_safe()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>re</code></td>
+  <td>sanitize_command() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>.test_sanitize_command_blocklist()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>sanitize_command()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>.test_sanitize_command_safe()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>sanitize_command()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>DEVLOG.md</code><br><small style="color:var(--muted)">DEVLOG.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing DEVLOG.md.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>AirGap Sentinel - Development Log (Graphify Integration)</code><br><small style="color:var(--muted)">DEVLOG.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing AirGap Sentinel - Development Log (Graphify Integration).</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing README.md.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Checks the suggested command against known destructive patterns. Why: Never…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Checks the suggested command against known destructive patterns. Why: Never….</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Prints a clean, formatted incident report for the human operator. Enforces…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Prints a clean, formatted incident report for the human operator. Enforces….</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Verify benign investigation commands pass through unchanged.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify benign investigation commands pass through unchanged..</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Verify dangerous and destructive commands are intercepted.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify dangerous and destructive commands are intercepted..</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>re</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>parse_and_clean_json()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>sanitize_command()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>re node in project.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>test_load_log_file_empty_raises()</code><br><small style="color:var(--muted)">test_sentinel.py</small><br><code>test_load_log_file_normal()</code><br><small style="color:var(--muted)">test_sentinel.py</small><br><code>test_load_log_file_truncation()</code><br><small style="color:var(--muted)">test_sentinel.py</small><br>+5 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>load_log_file()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>test_load_log_file_empty_raises()</code><br><small style="color:var(--muted)">test_sentinel.py</small><br><code>test_load_log_file_normal()</code><br><small style="color:var(--muted)">test_sentinel.py</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>load_log_file() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>.test_load_log_file_empty_raises()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>load_log_file()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>.test_load_log_file_normal()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>load_log_file()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>.test_load_log_file_truncation()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>load_log_file()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>.test_verbatim_evidence_verification()</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestAirGapSentinel</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>Reads a target log file and truncates it to the most recent lines/characters.…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Reads a target log file and truncates it to the most recent lines/characters.….</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>Verify verbatim matching detects hallucinated lines.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify verbatim matching detects hallucinated lines..</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>Verify normal log files load completely without truncation.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify normal log files load completely without truncation..</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>Verify empty log files raise ValueError.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify empty log files raise ValueError..</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>Verify logs &gt; 200 lines truncate to the last 200 lines.</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verify logs &gt; 200 lines truncate to the last 200 lines..</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>test_sentinel.py</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>os</code><br><code>pathlib</code><br><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small><br>+2 more</td>
+  <td>Module file in test_sentinel.py.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>Unit tests for AirGap Sentinel core modules and guardrails. Verifies prompt…</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Unit tests for AirGap Sentinel core modules and guardrails. Verifies prompt….</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>pathlib</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>test_sentinel.py</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>pathlib node in project.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>tempfile</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>test_sentinel.py</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>tempfile node in project.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>unittest</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>test_sentinel.py</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>test_sentinel.py</code></td><td>15 nodes</td></tr>
+<tr><td><code>sentinel.py</code></td><td>6 nodes</td></tr>
+<tr><td><code>DEVLOG.md</code></td><td>2 nodes</td></tr>
+<tr><td><code>README.md</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: explains x10, calls x7, method x6, references x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 6. sentinel.py ====== -->
+<h2 id="sentinel-py">6. sentinel.py</h2>
+<p>sentinel.py groups implementation around sentinelpy, diagnosis, local, backend, mostly in sentinel.py. This section covers 18 nodes and 35 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: sentinel.py (18 nodes, 35 edges)
+    subgraph sentinel_py_sentinel_py_b3dc5ab8["sentinel.py"]
+        sentinel_dff2bb52("sentinel.py")
+        sentinel_main_de06e792("main()<br/><small>sentinel.py</small>")
+        sentinel_diagnose_single_path_f9b368d4("diagnose_single_path()<br/><small>sentinel.py</small>")
+        sentinel_check_backend_893d5cf7("check_backend()<br/><small>sentinel.py</small>")
+        sentinel_run_cloud_diagnosis_cbd02d28("run_cloud_diagnosis()<br/><small>sentinel.py</small>")
+        sentinel_run_local_diagnosis_6524b545("run_local_diagnosis()<br/><small>sentinel.py</small>")
+        sentinel_get_local_model_496c613a("get_local_model()<br/><small>sentinel.py</small>")
+        sentinel_rationale_2_2e6ae300("AirGap Sentinel: Offline Incident Respo...<br/><small>sentinel.py</small>")
+        sentinel_rationale_487_42bcb687("Coordinates reading, AI diagnosis, and...<br/><small>sentinel.py</small>")
+        sentinel_rationale_228_2502ca41("Executes cloud diagnosis using Gemma 4...<br/><small>sentinel.py</small>")
+        sentinel_rationale_185_40585d93("Executes local offline diagnosis using...<br/><small>sentinel.py</small>")
+        sentinel_rationale_121_94ada01b("Resolves the local model to use, verify...<br/><small>sentinel.py</small>")
+        sentinel_rationale_346_adbc8593("Verifies backend connectivity and print...<br/><small>sentinel.py</small>")
+    end
+    subgraph sentinel_py_External_generated_ed211fe5["External / generated"]
+        os_999a3419("os")
+        sys_b4c56ee8("sys")
+        time_714eea0f("time")
+        argparse_e750ee7c("argparse")
+        logging_42f7b07d("logging")
+    end
+    sentinel_check_backend_893d5cf7 -->|calls| os_999a3419
+    sentinel_check_backend_893d5cf7 -->|calls| sys_b4c56ee8
+    sentinel_check_backend_893d5cf7 -->|calls| sentinel_get_local_model_496c613a
+    sentinel_diagnose_single_path_f9b368d4 -->|calls| time_714eea0f
+    sentinel_diagnose_single_path_f9b368d4 -->|calls| sentinel_run_cloud_diagnosis_cbd02d28
+    sentinel_diagnose_single_path_f9b368d4 -->|calls| sentinel_run_local_diagnosis_6524b545
+    sentinel_diagnose_single_path_f9b368d4 -->|calls| sys_b4c56ee8
+    sentinel_get_local_model_496c613a -->|calls| os_999a3419
+    sentinel_get_local_model_496c613a -->|calls| sys_b4c56ee8
+    sentinel_main_de06e792 -->|calls| argparse_e750ee7c
+    sentinel_main_de06e792 -->|calls| sys_b4c56ee8
+    sentinel_main_de06e792 -->|calls| sentinel_check_backend_893d5cf7
+    sentinel_main_de06e792 -->|calls| sentinel_diagnose_single_path_f9b368d4
+    sentinel_run_cloud_diagnosis_cbd02d28 -->|calls| os_999a3419
+    sentinel_run_cloud_diagnosis_cbd02d28 -->|calls| sys_b4c56ee8
+    sentinel_run_cloud_diagnosis_cbd02d28 -->|calls| time_714eea0f
+    sentinel_run_local_diagnosis_6524b545 -->|calls| os_999a3419
+    sentinel_run_local_diagnosis_6524b545 -->|calls| sentinel_get_local_model_496c613a
+    sentinel_dff2bb52 -->|imports| os_999a3419
+    sentinel_dff2bb52 -->|imports| time_714eea0f
+    sentinel_dff2bb52 -->|imports| logging_42f7b07d
+    sentinel_dff2bb52 -->|imports| argparse_e750ee7c
+    sentinel_dff2bb52 -->|imports| sys_b4c56ee8
+    class sentinel_dff2bb52 module;
+    class sentinel_main_de06e792 function;
+    class sentinel_diagnose_single_path_f9b368d4 function;
+    class sentinel_check_backend_893d5cf7 function;
+    class sentinel_run_cloud_diagnosis_cbd02d28 function;
+    class sentinel_run_local_diagnosis_6524b545 function;
+    class sentinel_get_local_model_496c613a function;
+    class sentinel_rationale_2_2e6ae300 concept;
+    class sentinel_rationale_487_42bcb687 concept;
+    class sentinel_rationale_228_2502ca41 concept;
+    class sentinel_rationale_185_40585d93 concept;
+    class sentinel_rationale_121_94ada01b concept;
+    class sentinel_rationale_346_adbc8593 concept;
+    class os_999a3419 function;
+    class sys_b4c56ee8 function;
+    class time_714eea0f function;
+    class argparse_e750ee7c function;
+    class logging_42f7b07d function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>check_backend()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>get_local_model()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>os</code><br><code>sys</code></td>
+  <td>check_backend() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>_handle()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>main()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>format_and_print_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>load_log_file()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>run_cloud_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br>+3 more</td>
+  <td>diagnose_single_path() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>get_local_model()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>check_backend()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>run_local_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>os</code><br><code>sys</code></td>
+  <td>get_local_model() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>main()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>argparse</code><br><code>check_backend()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small><br>+2 more</td>
+  <td>main() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>run_cloud_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>load_skill_prompt()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>os</code><br><code>parse_and_clean_json()</code><br><small style="color:var(--muted)">sentinel.py</small><br>+2 more</td>
+  <td>run_cloud_diagnosis() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>run_local_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>get_local_model()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>load_skill_prompt()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>os</code><br>+1 more</td>
+  <td>run_local_diagnosis() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>test_sentinel.py</code><br><small style="color:var(--muted)">test_sentinel.py</small></td>
+  <td><code>argparse</code><br><code>json</code><br><code>logging</code><br>+5 more</td>
+  <td>Module file in sentinel.py.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Resolves the local model to use, verifying it is pulled in Ollama. Why: Gives…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Resolves the local model to use, verifying it is pulled in Ollama. Why: Gives….</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Executes local offline diagnosis using Ollama with automatic retry on JSON…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Executes local offline diagnosis using Ollama with automatic retry on JSON….</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>AirGap Sentinel: Offline Incident Responder &amp; Log Diagnostician Pair-programmed…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for AirGap Sentinel: Offline Incident Responder &amp; Log Diagnostician Pair-programmed….</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Executes cloud diagnosis using Gemma 4 via Google Gemini API (Challenge C2).</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Executes cloud diagnosis using Gemma 4 via Google Gemini API (Challenge C2)..</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>Verifies backend connectivity and prints actionable troubleshooting steps.</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Verifies backend connectivity and prints actionable troubleshooting steps..</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>Coordinates reading, AI diagnosis, and output formatting for one target file.</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Coordinates reading, AI diagnosis, and output formatting for one target file..</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>argparse</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>argparse node in project.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>logging</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>logging node in project.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>os</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>check_backend()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>get_local_model()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>run_cloud_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br>+3 more</td>
+  <td>No direct outbound edge</td>
+  <td>os node in project.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>sys</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>check_backend()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>get_local_model()</code><br><small style="color:var(--muted)">sentinel.py</small><br>+3 more</td>
+  <td>No direct outbound edge</td>
+  <td>sys node in project.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>time</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>run_cloud_diagnosis()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>sentinel.py</code><br><small style="color:var(--muted)">sentinel.py</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>time node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>sentinel.py</code></td><td>13 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x18, contains x6, explains x6, imports x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 7. start_folder_watcher ====== -->
+<h2 id="start-folder-watcher">7. start_folder_watcher</h2>
+<p>start_folder_watcher groups implementation around sentinelpy, target, files, why, mostly in sentinel.py. This section covers 8 nodes and 10 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: start_folder_watcher (8 nodes, 10 edges)
+    sentinel_start_folder_watcher_on_created_6f81d0fd("on_created()<br/><small>sentinel.py</small>")
+    sentinel_start_folder_watcher_on_modified_1f35ecce("on_modified()<br/><small>sentinel.py</small>")
+    sentinel_start_folder_watcher_init_35c4e82a("__init__()<br/><small>sentinel.py</small>")
+    sentinel_start_folder_watcher_handle_32c870c4("_handle()<br/><small>sentinel.py</small>")
+    sentinel_wait_for_file_stability_3c30b417("wait_for_file_stability()<br/><small>sentinel.py</small>")
+    sentinel_start_folder_watcher_4a7a76bd("start_folder_watcher()<br/><small>sentinel.py</small>")
+    sentinel_rationale_457_645921bb("Waits until the target file's size stop...<br/><small>sentinel.py</small>")
+    sentinel_rationale_515_dd774f4b("Watches a target directory for new .log...<br/><small>sentinel.py</small>")
+    sentinel_start_folder_watcher_handle_32c870c4 -->|calls| sentinel_wait_for_file_stability_3c30b417
+    sentinel_start_folder_watcher_init_35c4e82a -->|calls| sentinel_start_folder_watcher_init_35c4e82a
+    sentinel_start_folder_watcher_on_created_6f81d0fd -->|calls| sentinel_start_folder_watcher_handle_32c870c4
+    sentinel_start_folder_watcher_on_modified_1f35ecce -->|calls| sentinel_start_folder_watcher_handle_32c870c4
+    class sentinel_start_folder_watcher_on_created_6f81d0fd function;
+    class sentinel_start_folder_watcher_on_modified_1f35ecce function;
+    class sentinel_start_folder_watcher_init_35c4e82a function;
+    class sentinel_start_folder_watcher_handle_32c870c4 function;
+    class sentinel_wait_for_file_stability_3c30b417 function;
+    class sentinel_start_folder_watcher_4a7a76bd function;
+    class sentinel_rationale_457_645921bb concept;
+    class sentinel_rationale_515_dd774f4b concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>start_folder_watcher()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>time</code></td>
+  <td>start_folder_watcher() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>_handle()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>on_created()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>on_modified()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>diagnose_single_path()</code><br><small style="color:var(--muted)">sentinel.py</small><br><code>wait_for_file_stability()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>_handle() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>__init__()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>__init__()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>__init__() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>on_created()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>_handle()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>on_created() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>on_modified()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>_handle()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td>on_modified() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>wait_for_file_stability()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>_handle()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><code>time</code></td>
+  <td>wait_for_file_stability() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Waits until the target file&#x27;s size stops changing for at least 1 second. Why:…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Waits until the target file&#x27;s size stops changing for at least 1 second. Why:….</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Watches a target directory for new .log/.txt/.dump files using watchdog. Why:…</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Watches a target directory for new .log/.txt/.dump files using watchdog. Why:….</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>sentinel.py</code></td><td>8 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x4, calls x4, explains x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 8. load_env_file ====== -->
+<h2 id="load-env-file">8. load_env_file</h2>
+<p>load_env_file groups implementation around env, sentinelpy, load, auto, mostly in sentinel.py. This section covers 2 nodes and 1 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: load_env_file (2 nodes, 1 edges)
+    sentinel_rationale_39_d44864b4("Auto-loads environment variables from a...<br/><small>sentinel.py</small>")
+    sentinel_load_env_file_8111d883("load_env_file()<br/><small>sentinel.py</small>")
+    sentinel_rationale_39_d44864b4 -->|explains| sentinel_load_env_file_8111d883
+    class sentinel_rationale_39_d44864b4 concept;
+    class sentinel_load_env_file_8111d883 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>load_env_file()</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>load_env_file() node in sentinel.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Auto-loads environment variables from a local .env file if present.</code><br><small style="color:var(--muted)">sentinel.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Auto-loads environment variables from a local .env file if present..</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>sentinel.py</code></td><td>2 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: explains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<h2 id="stats">Project Statistics</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>Graph</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>Nodes</td><td>81</td></tr>
+      <tr><td>Edges</td><td>127</td></tr>
+      <tr><td>Hyperedges</td><td>0</td></tr>
+      <tr><td>Communities</td><td>10</td></tr>
+      <tr><td>Documented Sections</td><td>7</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Edge Confidence</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>EXTRACTED</td><td>123</td></tr>
+      <tr><td>INFERRED</td><td>4</td></tr>
+      <tr><td>AMBIGUOUS</td><td>0</td></tr>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
+  <p>AirGap-Sentinal — Architecture Documentation</p>
+  <p>Generated: 2026-10-17 09:09 UTC · graphify callflow-html</p>
+</div>
+
+</div><!-- .container -->
+
+<script>
+(function () {
+  const mermaidConfig = {
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { htmlLabels: true, useMaxWidth: true },
+    themeVariables: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#334155',
+      lineColor: '#64748b',
+      textColor: '#e2e8f0',
+    }
+  };
+
+  mermaid.initialize(mermaidConfig);
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function enhanceMermaidDiagrams() {
+    document.querySelectorAll('.mermaid').forEach((container) => {
+      if (container.dataset.zoomReady === 'true') return;
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+
+      container.dataset.zoomReady = 'true';
+      container.classList.add('is-enhanced');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'mermaid-viewport';
+      svg.parentNode.insertBefore(viewport, svg);
+      viewport.appendChild(svg);
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'mermaid-toolbar';
+      toolbar.innerHTML = [
+        '<button type="button" data-action="zoom-out" title="Zoom out">-</button>',
+        '<span class="zoom-level" data-role="level">100%</span>',
+        '<button type="button" data-action="zoom-in" title="Zoom in">+</button>',
+        '<button type="button" data-action="fit" title="Fit width">Fit</button>',
+        '<button type="button" data-action="reset" title="Reset view">Reset</button>'
+      ].join('');
+      container.insertBefore(toolbar, viewport);
+
+      const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+      const level = toolbar.querySelector('[data-role="level"]');
+
+      function applyTransform() {
+        svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        level.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+
+      function zoomBy(delta) {
+        state.scale = clamp(state.scale + delta, 0.25, 3);
+        applyTransform();
+      }
+
+      function reset() {
+        state.scale = 1;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      function fitWidth() {
+        const rawWidth = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width
+          ? svg.viewBox.baseVal.width
+          : svg.getBoundingClientRect().width / state.scale;
+        if (!rawWidth) {
+          reset();
+          return;
+        }
+        state.scale = clamp((viewport.clientWidth - 48) / rawWidth, 0.25, 1.4);
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        if (action === 'zoom-in') zoomBy(0.15);
+        if (action === 'zoom-out') zoomBy(-0.15);
+        if (action === 'fit') fitWidth();
+        if (action === 'reset') reset();
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomBy(event.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.dragging = true;
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+        state.originX = state.x;
+        state.originY = state.y;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!state.dragging) return;
+        state.x = state.originX + event.clientX - state.startX;
+        state.y = state.originY + event.clientY - state.startY;
+        applyTransform();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      applyTransform();
+    });
+  }
+
+  function renderMermaid() {
+    const result = mermaid.run
+      ? mermaid.run({ querySelector: '.mermaid' })
+      : Promise.resolve();
+    Promise.resolve(result)
+      .then(enhanceMermaidDiagrams)
+      .catch((error) => {
+        console.error('Mermaid render failed:', error);
+        enhanceMermaidDiagrams();
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMermaid);
+  } else {
+    renderMermaid();
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,69 +1,118 @@
 {
   "communities": {
     "0": [
+      "argparse",
+      "logging",
       "os",
+      "sentinel",
+      "sentinel_check_backend",
+      "sentinel_diagnose_single_path",
       "sentinel_get_local_model",
-      "sentinel_load_skill_prompt",
-      "sentinel_rationale_160",
-      "sentinel_rationale_203",
-      "sentinel_rationale_47",
-      "sentinel_rationale_96",
+      "sentinel_main",
+      "sentinel_rationale_121",
+      "sentinel_rationale_185",
+      "sentinel_rationale_2",
+      "sentinel_rationale_228",
+      "sentinel_rationale_346",
+      "sentinel_rationale_487",
       "sentinel_run_cloud_diagnosis",
-      "sentinel_run_local_diagnosis"
+      "sentinel_run_local_diagnosis",
+      "sys",
+      "time"
     ],
     "1": [
-      "sentinel_rationale_398",
-      "sentinel_rationale_456",
+      "sentinel_rationale_457",
+      "sentinel_rationale_515",
       "sentinel_start_folder_watcher",
       "sentinel_start_folder_watcher_handle",
       "sentinel_start_folder_watcher_init",
       "sentinel_start_folder_watcher_on_created",
       "sentinel_start_folder_watcher_on_modified",
-      "sentinel_wait_for_file_stability",
-      "time"
+      "sentinel_wait_for_file_stability"
     ],
     "2": [
-      "argparse",
-      "sentinel_check_backend",
-      "sentinel_main",
-      "sentinel_rationale_292",
-      "sys"
+      "readme_1_clone_install_dependencies",
+      "readme_1_verify_backend_connectivity_check",
+      "readme_2_diagnose_a_single_incident_log_once_path",
+      "readme_2_prepare_local_ollama_offline_mode",
+      "readme_3_real_time_directory_watcher_watch_dir",
+      "readme_airgap_sentinel",
+      "readme_example_graph_queries_run_during_development",
+      "readme_hackathon_2_minute_demo_script_for_judges",
+      "readme_hackathon_challenges_satisfied",
+      "readme_how_we_used_graphify_challenge_c3",
+      "readme_license",
+      "readme_project_overview",
+      "readme_quick_start_installation",
+      "readme_running_airgap_sentinel",
+      "readme_sample_output"
     ],
     "3": [
-      "sentinel_diagnose_single_path",
       "sentinel_load_log_file",
-      "sentinel_rationale_428",
-      "sentinel_rationale_58"
+      "sentinel_rationale_83",
+      "test_sentinel_rationale_122",
+      "test_sentinel_rationale_27",
+      "test_sentinel_rationale_42",
+      "test_sentinel_rationale_55",
+      "test_sentinel_testairgapsentinel",
+      "test_sentinel_testairgapsentinel_test_load_log_file_empty_raises",
+      "test_sentinel_testairgapsentinel_test_load_log_file_normal",
+      "test_sentinel_testairgapsentinel_test_load_log_file_truncation",
+      "test_sentinel_testairgapsentinel_test_verbatim_evidence_verification"
     ],
     "4": [
-      "json",
-      "sentinel_parse_and_clean_json",
-      "sentinel_rationale_125"
+      "diagnostics_skill"
     ],
     "5": [
-      "pathlib",
-      "sentinel",
-      "sentinel_rationale_2"
+      "json",
+      "sentinel_parse_and_clean_json",
+      "sentinel_rationale_150",
+      "test_sentinel_rationale_73",
+      "test_sentinel_testairgapsentinel_test_parse_and_clean_json_valid"
     ],
     "6": [
-      "re",
-      "sentinel_rationale_149",
-      "sentinel_sanitize_command"
+      "pathlib",
+      "tempfile",
+      "test_sentinel",
+      "test_sentinel_rationale_2",
+      "unittest"
     ],
     "7": [
+      "devlog",
+      "devlog_airgap_sentinel_development_log_graphify_integration",
+      "re",
+      "readme",
       "sentinel_format_and_print_diagnosis",
-      "sentinel_rationale_350"
+      "sentinel_rationale_174",
+      "sentinel_rationale_409",
+      "sentinel_sanitize_command",
+      "test_sentinel_rationale_107",
+      "test_sentinel_rationale_90",
+      "test_sentinel_testairgapsentinel_test_sanitize_command_blocklist",
+      "test_sentinel_testairgapsentinel_test_sanitize_command_safe"
+    ],
+    "8": [
+      "sentinel_load_skill_prompt",
+      "sentinel_rationale_72",
+      "test_sentinel_rationale_18",
+      "test_sentinel_testairgapsentinel_test_load_skill_prompt"
+    ],
+    "9": [
+      "sentinel_load_env_file",
+      "sentinel_rationale_39"
     ]
   },
   "cohesion": {
-    "0": 0.2777777777777778,
-    "1": 0.3055555555555556,
-    "2": 0.5,
-    "3": 0.5,
-    "4": 0.6666666666666666,
-    "5": 0.6666666666666666,
-    "6": 0.6666666666666666,
-    "7": 1.0
+    "0": 0.22875816993464052,
+    "1": 0.32142857142857145,
+    "2": 0.13333333333333333,
+    "3": 0.21818181818181817,
+    "4": 1.0,
+    "5": 0.4,
+    "6": 0.4,
+    "7": 0.18181818181818182,
+    "8": 0.5,
+    "9": 1.0
   },
   "gods": [
     {
@@ -72,14 +121,24 @@
       "degree": 10
     },
     {
-      "id": "sentinel_start_folder_watcher",
-      "label": "start_folder_watcher()",
-      "degree": 8
+      "id": "test_sentinel_testairgapsentinel",
+      "label": "TestAirGapSentinel",
+      "degree": 9
+    },
+    {
+      "id": "readme_airgap_sentinel",
+      "label": "AirGap Sentinel 🛡️",
+      "degree": 9
     },
     {
       "id": "sentinel_run_cloud_diagnosis",
       "label": "run_cloud_diagnosis()",
-      "degree": 7
+      "degree": 8
+    },
+    {
+      "id": "sentinel_start_folder_watcher",
+      "label": "start_folder_watcher()",
+      "degree": 8
     },
     {
       "id": "sentinel_run_local_diagnosis",
@@ -87,9 +146,14 @@
       "degree": 7
     },
     {
-      "id": "sentinel_get_local_model",
-      "label": "get_local_model()",
-      "degree": 6
+      "id": "sentinel_parse_and_clean_json",
+      "label": "parse_and_clean_json()",
+      "degree": 7
+    },
+    {
+      "id": "sentinel_sanitize_command",
+      "label": "sanitize_command()",
+      "degree": 7
     },
     {
       "id": "sentinel_check_backend",
@@ -97,98 +161,77 @@
       "degree": 6
     },
     {
-      "id": "sentinel_main",
-      "label": "main()",
+      "id": "sentinel_get_local_model",
+      "label": "get_local_model()",
       "degree": 6
-    },
-    {
-      "id": "sentinel_parse_and_clean_json",
-      "label": "parse_and_clean_json()",
-      "degree": 6
-    },
-    {
-      "id": "sentinel_start_folder_watcher_handle",
-      "label": "_handle()",
-      "degree": 5
-    },
-    {
-      "id": "sentinel_load_skill_prompt",
-      "label": "load_skill_prompt()",
-      "degree": 4
     }
   ],
   "surprises": [
     {
-      "source": "check_backend()",
-      "target": "get_local_model()",
+      "source": "AirGap Sentinel - Development Log (Graphify Integration)",
+      "target": "_handle()",
       "source_files": [
-        "sentinel.py",
+        "DEVLOG.md",
         "sentinel.py"
       ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "note": "Bridges community 0 → community 2"
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code ↔ doc); bridges separate communities"
     },
     {
-      "source": "diagnose_single_path()",
-      "target": "run_cloud_diagnosis()",
+      "source": "AirGap Sentinel - Development Log (Graphify Integration)",
+      "target": "wait_for_file_stability()",
       "source_files": [
-        "sentinel.py",
+        "DEVLOG.md",
         "sentinel.py"
       ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "note": "Bridges community 0 → community 3"
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code ↔ doc); bridges separate communities"
     },
     {
-      "source": "run_cloud_diagnosis()",
-      "target": "parse_and_clean_json()",
+      "source": "AirGap Sentinel - Development Log (Graphify Integration)",
+      "target": "format_and_print_diagnosis()",
       "source_files": [
-        "sentinel.py",
+        "DEVLOG.md",
         "sentinel.py"
       ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "note": "Bridges community 0 → community 4"
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code ↔ doc)"
     },
     {
-      "source": "main()",
-      "target": "start_folder_watcher()",
+      "source": "AirGap Sentinel - Development Log (Graphify Integration)",
+      "target": "sanitize_command()",
       "source_files": [
-        "sentinel.py",
+        "DEVLOG.md",
         "sentinel.py"
       ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "note": "Bridges community 1 → community 2"
-    },
-    {
-      "source": "_handle()",
-      "target": "diagnose_single_path()",
-      "source_files": [
-        "sentinel.py",
-        "sentinel.py"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "note": "Bridges community 1 → community 3"
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code ↔ doc)"
     }
   ],
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `start_folder_watcher()` connect `start_folder_watcher` to `check_backend`, `sentinel.py`?",
-      "why": "High betweenness centrality (0.187) - this node is a cross-community bridge."
+      "question": "Why does `AirGap Sentinel - Development Log (Graphify Integration)` connect `sanitize_command` to `start_folder_watcher`?",
+      "why": "High betweenness centrality (0.341) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `AirGap Sentinel 🛡️` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `diagnose_single_path()` connect `diagnose_single_path` to `run_cloud_diagnosis`, `start_folder_watcher`, `check_backend`, `sentinel.py`, `format_and_print_diagnosis`?",
-      "why": "High betweenness centrality (0.127) - this node is a cross-community bridge."
+      "question": "Why does `AirGap Sentinel 🛡️` connect `AirGap Sentinel 🛡️` to `sanitize_command`?",
+      "why": "High betweenness centrality (0.314) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `run_local_diagnosis()` connect `run_cloud_diagnosis` to `diagnose_single_path`, `parse_and_clean_json`, `sentinel.py`?",
-      "why": "High betweenness centrality (0.073) - this node is a cross-community bridge."
+      "question": "Why does `sanitize_command()` connect `sanitize_command` to `sentinel.py`?",
+      "why": "High betweenness centrality (0.197) - this node is a cross-community bridge."
     }
   ]
 }

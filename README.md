@@ -144,8 +144,11 @@ CONFIDENCE: HIGH
 During development, we used **Graphify** (`graphifyy`) to parse, index, and query our Python AST architecture.
 
 * **Committed Graph Artifacts:**
-  * [`graphify-out/graph.json`](./graphify-out/graph.json): 38 semantic nodes and 72 structural edges representing the complete call hierarchy and dataflow.
+  * [`graphify-out/graph.json`](./graphify-out/graph.json): 81 semantic nodes and 127 structural edges representing the complete call hierarchy and dataflow.
   * [`graphify-out/graph.html`](./graphify-out/graph.html): Interactive D3 visual network representation of the Sentinel architecture.
+  * [`graphify-out/GRAPH_TREE.html`](./graphify-out/GRAPH_TREE.html): Interactive D3 collapsible tree hierarchy representation.
+  * [`graphify-out/AirGap-Sentinal-callflow.html`](./graphify-out/AirGap-Sentinal-callflow.html): Interactive Mermaid architecture diagrams and execution call-flow tables.
+  * [`graphify-out/wiki/`](./graphify-out/wiki/): 20 architectural wiki markdown articles indexed at `index.md`.
   * [`graphify-out/GRAPH_REPORT.md`](./graphify-out/GRAPH_REPORT.md): Community clustering report detailing symbol cohesion and modular boundaries.
 * **Audit Trail:**
   * All Graphify execution milestones and semantic queries are logged in [`DEVLOG.md`](./DEVLOG.md).
