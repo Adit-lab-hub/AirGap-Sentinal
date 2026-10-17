@@ -34,6 +34,26 @@ SUPPORTED_EXTENSIONS = {".log", ".txt", ".dump"}
 # Path to the diagnostics skill document that acts as our system prompt contract
 SKILL_PATH = Path(__file__).parent / "diagnostics.SKILL.md"
 
+
+def load_env_file():
+    """Auto-loads environment variables from a local .env file if present."""
+    env_path = Path(__file__).parent / ".env"
+    if env_path.is_file():
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k, v = k.strip(), v.strip().strip('"').strip("'")
+                        if k not in os.environ:
+                            os.environ[k] = v
+        except Exception:
+            pass
+
+
+load_env_file()
+
 # Dangerous commands blocklist: NEVER allow destructive or bricking commands
 # to reach an operator even as a suggestion (Rule 6 & Rule 9).
 DANGEROUS_PATTERNS = [
@@ -223,7 +243,7 @@ def run_cloud_diagnosis(log_text: str) -> tuple[dict | None, str, str]:
         print("[ERROR] google-genai package not found. Run: pip install google-genai", file=sys.stderr)
         sys.exit(1)
 
-    model_name = os.getenv("SENTINEL_CLOUD_MODEL", "gemma-4-31b-it")
+    model_name = os.getenv("SENTINEL_CLOUD_MODEL", "gemma-4-26b-a4b-it")
     system_prompt = load_skill_prompt()
 
     try:
@@ -232,44 +252,73 @@ def run_cloud_diagnosis(log_text: str) -> tuple[dict | None, str, str]:
         print(f"[ERROR] Failed to initialize Gemini API client: {e}", file=sys.stderr)
         sys.exit(1)
 
-    raw_content = ""
-    try:
-        config = types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            response_mime_type="application/json",
-            temperature=0.0,
-        )
-        response = client.models.generate_content(
-            model=model_name,
-            contents=log_text,
-            config=config,
-        )
-        raw_content = response.text or ""
-    except Exception as e:
-        err_str = str(e).lower()
-        if any(term in err_str for term in ["api_key", "401", "403", "unauthenticated", "permission"]):
-            print(f"[ERROR] Gemini API authentication failed. Verify your GEMINI_API_KEY.", file=sys.stderr)
-            print(f"        Details: {e}", file=sys.stderr)
-            sys.exit(1)
-        elif any(term in err_str for term in ["quota", "429", "resourceexhausted"]):
-            print(f"[ERROR] Gemini API quota or rate limit exceeded: {e}", file=sys.stderr)
-            sys.exit(1)
-        elif any(term in err_str for term in ["connection", "unreachable", "dns", "timeout", "socket"]):
-            print(f"[ERROR] Network error: Unable to reach Gemini API. Are you offline?", file=sys.stderr)
-            print(f"        Details: {e}", file=sys.stderr)
-            sys.exit(1)
+    models_to_try = [model_name]
+    fallback_model = "gemma-4-31b-it" if model_name != "gemma-4-31b-it" else "gemma-4-26b-a4b-it"
+    if fallback_model not in models_to_try:
+        models_to_try.append(fallback_model)
 
-        try:
-            combined_message = f"{system_prompt}\n\nTARGET LOG TO DIAGNOSE:\n{log_text}"
-            response = client.models.generate_content(
-                model=model_name,
-                contents=combined_message,
-                config=types.GenerateContentConfig(temperature=0.0),
-            )
-            raw_content = response.text or ""
-        except Exception as fallback_err:
-            print(f"[ERROR] Cloud diagnosis failed on model '{model_name}': {fallback_err}", file=sys.stderr)
-            sys.exit(1)
+    raw_content = ""
+    last_err = None
+    used_model = model_name
+
+    for candidate_model in models_to_try:
+        for attempt in range(2):
+            try:
+                config = types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    response_mime_type="application/json",
+                    temperature=0.0,
+                    http_options=types.HttpOptions(timeout=60_000),
+                )
+                response = client.models.generate_content(
+                    model=candidate_model,
+                    contents=log_text,
+                    config=config,
+                )
+                raw_content = response.text or ""
+                if raw_content:
+                    used_model = candidate_model
+                    break
+            except Exception as e:
+                last_err = e
+                err_str = str(e).lower()
+                if any(term in err_str for term in ["api_key", "401", "403", "unauthenticated", "permission"]):
+                    print(f"[ERROR] Gemini API authentication failed. Verify your GEMINI_API_KEY.", file=sys.stderr)
+                    print(f"        Details: {e}", file=sys.stderr)
+                    sys.exit(1)
+                elif any(term in err_str for term in ["quota", "429", "resourceexhausted"]):
+                    print(f"[ERROR] Gemini API quota or rate limit exceeded: {e}", file=sys.stderr)
+                    sys.exit(1)
+                elif any(term in err_str for term in ["connection", "unreachable", "dns", "socket"]):
+                    print(f"[ERROR] Network error: Unable to reach Gemini API. Are you offline?", file=sys.stderr)
+                    print(f"        Details: {e}", file=sys.stderr)
+                    sys.exit(1)
+
+                time.sleep(1.0)
+                try:
+                    combined_message = f"{system_prompt}\n\nTARGET LOG TO DIAGNOSE:\n{log_text}"
+                    response = client.models.generate_content(
+                        model=candidate_model,
+                        contents=combined_message,
+                        config=types.GenerateContentConfig(
+                            temperature=0.0,
+                            http_options=types.HttpOptions(timeout=60_000),
+                        ),
+                    )
+                    raw_content = response.text or ""
+                    if raw_content:
+                        used_model = candidate_model
+                        break
+                except Exception as inner_err:
+                    last_err = inner_err
+                    time.sleep(1.0)
+
+        if raw_content:
+            break
+
+    if not raw_content:
+        print(f"[ERROR] Cloud diagnosis failed across Gemma 4 models: {last_err}", file=sys.stderr)
+        sys.exit(1)
 
     parsed = parse_and_clean_json(raw_content)
 
@@ -281,7 +330,7 @@ def run_cloud_diagnosis(log_text: str) -> tuple[dict | None, str, str]:
                 f"Please reply ONLY with a valid JSON object diagnosing this log:\n{log_text}"
             )
             retry_res = client.models.generate_content(
-                model=model_name,
+                model=used_model,
                 contents=retry_prompt,
                 config=types.GenerateContentConfig(temperature=0.0),
             )
@@ -290,7 +339,7 @@ def run_cloud_diagnosis(log_text: str) -> tuple[dict | None, str, str]:
         except Exception:
             pass
 
-    return parsed, raw_content, model_name
+    return parsed, raw_content, used_model
 
 
 def check_backend(use_cloud: bool = False):
@@ -314,17 +363,17 @@ def check_backend(use_cloud: bool = False):
             print("       Fix: pip install google-genai")
             sys.exit(1)
 
-        model_name = os.getenv("SENTINEL_CLOUD_MODEL", "gemma-4-31b-it")
+        model_name = os.getenv("SENTINEL_CLOUD_MODEL", "gemma-4-26b-a4b-it")
         try:
             client = genai.Client(api_key=api_key)
-            # 30-second timeout prevents --check from hanging on a slow cold-start.
+            # 60-second timeout allows sufficient buffer for cold-starts.
             # http_options passes a per-request timeout through the underlying httpx transport.
             client.models.generate_content(
                 model=model_name,
                 contents="Reply with the single word: ready",
                 config=types.GenerateContentConfig(
                     temperature=0.0,
-                    http_options=types.HttpOptions(timeout=30_000),  # milliseconds
+                    http_options=types.HttpOptions(timeout=60_000),  # milliseconds
                 ),
             )
             print(f"[PASS] Successfully connected to Gemini API with Gemma 4 model '{model_name}'.")

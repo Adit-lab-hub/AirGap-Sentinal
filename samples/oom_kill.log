@@ -1,0 +1,14 @@
+Oct 17 14:00:02 scada-node-03 systemd[1]: Starting SCADA Telemetry Stream...
+Oct 17 14:00:05 scada-node-03 scada-agent[2104]: Initialized sensor aggregator on CAN bus 0
+Oct 17 14:01:00 scada-node-03 scada-agent[2104]: Ingestion rate: 14,200 msg/sec
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102319] scada-agent invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102324] CPU: 2 PID: 2104 Comm: scada-agent Not tainted 5.15.0-101-generic #111-Ubuntu
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102328] Hardware name: Advantech Industrial PC UNO-2484G/UNO-2484G, BIOS 0.12 03/14/2024
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102340] Mem-Info:
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102342] active_anon:982310 inactive_anon:4209 isolated_anon:0 active_file:12 inactive_file:10
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102350] Free swap  = 0kB
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102352] Total swap = 0kB
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102354] 1048576 pages RAM
+Oct 17 14:02:15 scada-node-03 kernel: [ 8912.102401] Out of memory: Killed process 2104 (scada-agent) total-vm:4194304kB, anon-rss:3984120kB, file-rss:0kB, shmem-rss:0kB, UID:1001 pgtables:8192kB oom_score_adj:0
+Oct 17 14:02:16 scada-node-03 systemd[1]: scada-agent.service: Main process exited, code=killed, status=9/KILL
+Oct 17 14:02:16 scada-node-03 systemd[1]: scada-agent.service: Failed with result 'oom-kill'.
